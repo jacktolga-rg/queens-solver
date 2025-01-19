@@ -1,0 +1,221 @@
+*, *:before, *:after {
+    box-sizing: border-box;
+}
+
+:root {
+    --colour-text: #2e2e2e;
+    --colour-bg: #f9fafb;
+    --colour-primary: #749cec;
+    --colour-primary-dark: #3766c4;
+    --colour-secondary: #c285e0;
+    --colour-secondary-dark: #8c39b6;
+    --colour-bg-dark: #e2eefa;
+    --queens-board-colour0: #ffffff;
+    --queens-board-colour16: #ffe04b;
+    --queens-board-colour15: #c387e0;
+    --queens-board-colour14: #729aec;
+    --queens-board-colour13: #8acc6d;
+    --queens-board-colour12: #ff93f3;
+    --queens-board-colour11: #62efea;
+    --queens-board-colour10: #a3d2d8;
+    --queens-board-colour9: #dfa0bf;
+    --queens-board-colour8: #b9b29e;
+    --queens-board-colour7: #e6f388;
+    --queens-board-colour6: #ff7b60;
+    --queens-board-colour5: #dfdfdf;
+    --queens-board-colour4: #b3dfa0;
+    --queens-board-colour3: #96beff;
+    --queens-board-colour2: #ffc992;
+    --queens-board-colour1: #bba3e2;
+    --max-app-width: 800px;
+    --board-size: clamp(200px, 100%, var(--max-app-width));
+}
+
+body {
+    margin: 0;
+    font-family: 'Noto Sans';
+    color: var(--colour-text);
+    background-color: var(--colour-bg);
+    overflow: hidden;
+}
+
+.appContainer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    gap: 4rem;
+    justify-content: center;
+}
+
+.appContent {
+    width: 100%;
+    max-width: var(--max-app-width);
+    margin: 4rem 0;
+}
+
+h1 {
+    font-size: 4em;
+    font-weight: 400;
+    margin: 4rem 0 0;
+}
+
+h2 {
+    font-size: 1.2em;
+    font-weight: 400;
+}
+
+h3 {
+    font-size: 1em;
+    font-weight: bold;
+}
+
+h3 em {
+    font-weight: 400;
+    padding: 0 0.5rem;
+    color: var(--colour-primary);
+}
+
+button {
+    border-radius: 10%;
+    border: none;
+    min-width: 5em;
+    margin: 0 0.2em 0;
+    transition: 250ms;
+    color: var(--colour-text);
+    opacity: 0.5;
+    font-weight: bold;
+    font-size: medium;
+}
+
+button:enabled {
+    opacity: 1;
+    cursor: pointer;
+}
+
+.resetBtn {
+    background-color: var(--colour-primary);
+}
+
+.resetBtn:enabled:hover {
+    background-color: var(--colour-primary-dark);
+    color: var(--colour-bg);
+}
+
+.solveBtn {
+    background-color: var(--colour-secondary);
+}
+
+.solveBtn:enabled:hover {
+    background-color: var(--colour-secondary-dark);
+    color: var(--colour-bg);
+}
+
+.settings {
+    width: 100%;
+    display: flex;
+    padding: 2em 0;
+}
+
+.boardSizeSettings {
+    flex-grow: 1;
+    padding-right: 4em;
+}
+
+.sizeSlider {
+  appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 1.5rem;
+  background-color: var(--colour-bg-dark);
+  border-radius: calc(1.5rem + 1px);
+  cursor: pointer;
+  outline: none;
+  overflow: hidden;
+}
+
+.sizeSlider:disabled {
+    cursor: default;
+}
+
+.sizeSlider::-webkit-slider-thumb {
+    appearance: none;
+    height: 1.5rem;
+    aspect-ratio: 1;
+    background-color: var(--colour-bg);
+    border-radius: 50%;
+    border: 0.2rem solid var(--colour-primary);
+    box-shadow: -50.7rem 0 0 50rem var(--colour-primary);
+}
+
+.board {
+    display: grid;
+    width: var(--board-size);
+    aspect-ratio: 1;
+    overflow: hidden;
+    border: 1px solid var(--colour-text);
+    background-color: var(--colour-text);
+}
+
+.square {
+    width: 100%;
+    display: flex;
+    place-content: center;
+    aspect-ratio: 1;
+    background-color: var(--colour-no-selection);
+    border: 1px solid var(--colour-text);
+    transition: 200ms;
+}
+
+.square svg {
+    width: 50%;
+    transform: scale(0);
+    transition: 250ms;
+}
+
+.isQueen svg,
+.isNoGo svg {
+    transform: scale(1);
+}
+
+.regionSelector {
+    width: 100%;
+    padding: 2em;
+    border-radius: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    grid-gap: 1rem;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--colour-bg-dark);
+}
+
+.regionSelector input {
+    appearance: none;
+    display: grid;
+    place-content: center;
+    height: 4rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    transition: 150ms;
+}
+
+.regionSelector input:enabled {
+    cursor: pointer;
+}
+
+.regionSelector input:hover:enabled {
+    opacity: 0.8;
+}
+
+.regionSelector input::before {
+    content: "";
+    width: 3rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    transition: 250ms;
+    box-shadow: inset 3rem 3rem var(--colour-bg);
+}
+
+.regionSelector input:checked::before {
+    opacity: 0;
+}
