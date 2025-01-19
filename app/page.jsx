@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { BoardModel } from './board';
+import BoardModel from './board';
 import BoardSolver from './solver'
 
 const BoardControl = ({ size, newSize, setNewSize, boardIsFullyDefined, reset, solve, isEditable, isResettable }) => {
@@ -55,7 +55,7 @@ const Square = ({ x, y, region, isQueen, isNoGo, selectedRegion, updateRegion, m
 
     return (
         <div
-            className={`square${isQueen ? ' isQueen' : ''}${isEditable ? '' : ' disabled'}`}
+            className={`square${isQueen ? ' isQueen' : ''}${isNoGo ? '' : ' isNoGo'}`}
             style={{backgroundColor: `var(--queens-board-colour${region + 1})`}}
             onMouseDown={() => {if (isEditable) updateRegion(x, y, selectedRegion)}}
             onMouseOver={(e) => {
@@ -129,13 +129,15 @@ const App = () => {
     const [isResettable, setResettable] = useState(false);
 
     return (
-        <div className='appContainer'
-        onMouseUp={() => setMouseIsDown(false)}
-        onMouseDown={() => setMouseIsDown(true)}
-        onDragStart={(e) => {
-            e.preventDefault();
-            return false;
-        }}>
+        <div
+            className='appContainer'
+            onMouseUp={() => setMouseIsDown(false)}
+            onMouseDown={() => setMouseIsDown(true)}
+            onDragStart={(e) => {
+                e.preventDefault();
+                return false;
+            }}
+        >
             <div className='appContent'>
                 <h1>Queens Solver</h1>
                 <h2>Create and solve Queens boards in seconds.</h2>
