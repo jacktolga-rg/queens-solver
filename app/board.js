@@ -54,6 +54,18 @@ export default class BoardModel {
         );
     }
 
+    get regions() {
+        return this.#regions;
+    }
+
+    get rows() {
+        return this.#rows;
+    }
+
+    get columns() {
+        return this.#columns;
+    }
+
     getSquare(x, y) {
         return this.#squares[this.#get1dIndex(x, y)];
     }
@@ -101,8 +113,6 @@ export default class BoardModel {
             if (x < 0 || x >= this.size || y < 0 || y >= this.size) return;
             this.setNoGo(x, y);
         });
-        const newBoard = this.clone();
-        return newBoard;
     }
 
     setNoGo(x, y) {
@@ -154,6 +164,10 @@ class SquareCollection {
     get size() {
         if (this.#squares === undefined) return 0;
         return this.#squares.length;
+    }
+
+    get squares() {
+        return this.#squares;
     }
 
     get queens() {

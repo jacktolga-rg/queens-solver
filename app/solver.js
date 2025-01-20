@@ -5,77 +5,88 @@ export default class BoardSolver {
         this.#board = board;
     }
 
-    *solve() {
-        while (!this.#board.isSolved && !this.#board.isUnsolvable) {
-            for (let i = 1; i < this.#board.size; i++) {
-                this.setNoGosCoveringRegions();
-                let indexSeqs = this.generateIndexSequences(i);
-                for (let seq of indexSeqs) {
-                    let containedRegions = this.getContainedRegions(seq, 0);
-                    this.setNoGosInSlice(seq, containedRegions, 0);
-                    if (containedRegions.length > i) yield this.#board.clone();
-                    containedRegions = this.getContainedRegions(seq, 1);
-                    this.setNoGosInSlice(seq, containedRegions, 1);
-                    if (containedRegions.length > i) yield this.#board.clone();
-                    this.setQueens();
+    solve() {
+        for (let n = 1; n < this.#board.size; n++) {
+            const indexGroups = this.generateIndexGroups(n);
+            let numQueensPlaced = 1;
+            while (numQueensPlaced > 0) {
+                for (let indices of indexGroups) {
+                    numQueensPlaced = this.placeQueens();
+                    if (this.#board.isSolved || this.#board.isUnsolvable)
+                        return this.#board.clone();
+
+                    this.setNoGosCoveringRegions();
+
+                    numQueensPlaced += this.placeQueens();
+                    if (this.#board.isSolved || this.#board.isUnsolvable)
+                        return this.#board.clone();
+    
+                    // Check row group
+                    let containedRegions = this.getContainedRegions(indices, 0);
+                    this.setNoGosByGroup(indices, containedRegions, 0);
+                    numQueensPlaced += this.placeQueens();
+                    if (this.#board.isSolved || this.#board.isUnsolvable)
+                        return this.#board.clone();
+    
+                    // Check column group
+                    containedRegions = this.getContainedRegions(indices, 1);
+                    this.setNoGosByGroup(indices, containedRegions, 1);
                 }
             }
-            yield this.#board.clone();
         }
-        yield this.#board.clone();
+        this.placeQueens();
+        return this.#board.clone();
     }
 
-    generateIndexSequences(n) {
-        const seqs = [];
+    generateIndexGroups(n) {
+        const groups = [];
         for (let i = 0; i <= this.#board.size - n; i++) {
-            const seq = [];
-            for (let j = i; j < i + n; j++) seq.push(j);
-            seqs.push(seq);
+            const indices = [];
+            for (let j = i; j < i + n; j++) indices.push(j);
+            groups.push(indices);
         }
-        return seqs;
+        return groups;
     }
 
-    getContainedRegions(seq, axis) {
-        const regionsAreContained = new Array(this.#board.size).fill(true);
-        for (let i = 0; i < this.#board.size; i++) {
-            if (axis === 0 && seq.includes(i)) continue;
-            for (let j = 0; j < this.#board.size; j++) {
-                if (axis === 1 && seq.includes(j)) continue;
-                let square = this.#board.getSquare(i, j);
-                if (!square.isNoGo)
-                    regionsAreContained[square.region] = false;
-            }
-        }
-        const numValidSquaresPerRegion = new Array(this.#board.size).fill(0);
-        for (let i = 0; i < this.#board.size; i++) {
-            if (axis === 0 && !seq.includes(i)) continue;
-            for (let j = 0; j < this.#board.size; j++) {
-                if (axis === 1 && !seq.includes(j)) continue;
-                let square = this.#board.getSquare(i, j);
-                if (!square.isNoGo)
-                    numValidSquaresPerRegion[square.region]++;
-            }
-        }
-        const regionsWithValidSquares = numValidSquaresPerRegion
-            .map((value) => value > 0);
-        return regionsAreContained.map((value, index) => value ? index : null)
-            .filter(index => index !== null)
-            .map((value, index) => value && regionsWithValidSquares[index]);
+    getContainedRegions(indices, axis) {
+        const squaresPerRegion = this.#board.regions.map(r => r.size - r.noGos.length);
+        const rowsOrCols = axis === 0 ? this.#board.rows : this.#board.columns;
         
+        const squaresInGroup = rowsOrCols.filter((_, i) => indices.includes(i))
+            .flatMap(rc => rc.squares);
+
+        const containedSquaresPerRegion = squaresInGroup.reduce((accumulator, square) => {
+            if (!square.isNoGo && !square.isQueen) {
+                accumulator[square.region]++;
+            }
+            return accumulator;
+        }, new Array(this.#board.size).fill(0));
+
+        const fullyContainedRegions = containedSquaresPerRegion.map((n, i) => {
+            return n === squaresPerRegion[i] && n !== 0 ? i : null
+        }).filter(i => i !== null);
+        
+        const partiallyContainedRegions = containedSquaresPerRegion.map((n, i) => {
+            return n < squaresPerRegion[i] && n !== 0 ? i : null
+        }).filter(i => i !== null);
+
+        return { full: fullyContainedRegions, partial: partiallyContainedRegions };
     }
 
-    setNoGosInSlice(seq, containedRegions, axis) {
-        if (containedRegions.length > seq.length) return;
-        if (containedRegions.length === seq.length) {
-            for (let i = 0; i < this.#board.size; i++) {
-                if (axis === 0 && !seq.includes(i)) continue;
-                for (let j = 0; j < this.#board.size; j++) {
-                    if (axis === 1 && !seq.includes(j)) continue;
-                    if (!containedRegions.includes(this.#board.getSquare(i, j).region))
-                        this.#board.setNoGo(i, j);
-                }
-            }
-        }
+    setNoGosByGroup(indices, containedRegions, axis) {
+        // if (containedRegions.length > indices.length) return;
+        // if (containedRegions.length === indices.length) {
+        //     for (let i = 0; i < this.#board.size; i++) {
+        //         if (axis === 0 && !indices.includes(i)) continue;
+        //         for (let j = 0; j < this.#board.size; j++) {
+        //             if (axis === 1 && !indices.includes(j)) continue;
+        //             if (!containedRegions.includes(this.#board.getSquare(i, j).region))
+        //                 this.#board.setNoGo(i, j);
+        //         }
+        //     }
+        // }
+
+        
     }
 
     setNoGosCoveringRegions() {
@@ -103,7 +114,7 @@ export default class BoardSolver {
         }
     }
 
-    setQueens() {
+    placeQueens() {
         let solvedRegions = this.#board.numNoGosPerRegion
             .map((value, index) => value === 1 ? index : null)
             .filter(index => index !== null)

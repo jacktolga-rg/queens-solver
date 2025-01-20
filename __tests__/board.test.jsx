@@ -48,7 +48,7 @@ test('BoardUpdateWhenQueenPlaced', () => {
     {x: 3, y: 1, region: 3},
     {x: 3, y: 2, region: 3},
     {x: 3, y: 3, region: 3},
-  ]
+  ];
   for (let { x, y, region } of updates) board = board.setRegion(x, y, region);
   board = board.setQueen(...queenIndex);
   expect(board.getSquare(...queenIndex).isQueen).toBe(true);
