@@ -16,9 +16,34 @@ export default class BoardModel {
         const regions = [];
         const rows = [];
         const columns = [];
-        const squaresGroupedByRegion = Object.groupBy(this.#squares, s => s.region);
-        const squaresGroupedByRow = Object.groupBy(this.#squares, (_, i) => Math.floor(i / this.size));
-        const squaresGroupedByColumn = Object.groupBy(this.#squares, (_, i) => i % this.size);
+
+        // const squaresGroupedByRegion = Object.groupBy(this.#squares, s => s.region);
+        // const squaresGroupedByRow = Object.groupBy(this.#squares, (_, i) => Math.floor(i / this.size));
+        // const squaresGroupedByColumn = Object.groupBy(this.#squares, (_, i) => i % this.size);
+
+        // Workaround for unsupported Object.groupBy()
+        const squaresGroupedByRegion = {};
+        const squaresGroupedByRow = {};
+        const squaresGroupedByColumn = {};
+
+        for (let i = 0; i < this.size; i++) {
+            squaresGroupedByRegion[i] = [];
+            squaresGroupedByRow[i] = [];
+            squaresGroupedByColumn[i] = [];
+        }
+
+        this.#squares.forEach((square, index) => {
+            const row = Math.floor(index / this.size);
+            const col = index % this.size;
+            
+            if (square.region >= 0) {
+                squaresGroupedByRegion[square.region].push(square);
+            }
+            squaresGroupedByRow[row].push(square);
+            squaresGroupedByColumn[col].push(square);
+        });
+        
+
         for (let i = 0; i < this.size; i++) {
             regions.push(new SquareCollection(squaresGroupedByRegion[i.toString()]));
             rows.push(new SquareCollection(squaresGroupedByRow[i.toString()]));
