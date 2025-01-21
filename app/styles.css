@@ -10,6 +10,7 @@
     --colour-secondary: #c285e0;
     --colour-secondary-dark: #8c39b6;
     --colour-bg-dark: #e2eefa;
+    --colour-error: #cb112d;
     --queens-board-colour0: #ffffff;
     --queens-board-colour16: #ffe04b;
     --queens-board-colour15: #c387e0;
@@ -173,8 +174,12 @@ button:enabled {
 }
 
 .isQueen svg,
-.isNoGo svg {
+.isUnsolvable svg {
     transform: scale(1);
+}
+
+.isUnsolvable svg polygon {
+    fill: var(--colour-error)
 }
 
 .regionSelector {

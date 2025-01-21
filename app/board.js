@@ -72,10 +72,11 @@ export default class BoardModel {
     }
 
     get isUnsolvable() {
+        if (!this.isFullyDefined) return false;
         return (
-            this.#regions.every(r => r.isUnsolvable)
-            && this.#rows.every(r => r.isUnsolvable)
-            && this.#columns.every(r => r.isUnsolvable)
+            this.#regions.some(r => r.isUnsolvable)
+            || this.#rows.some(r => r.isUnsolvable)
+            || this.#columns.some(r => r.isUnsolvable)
         );
     }
 
@@ -96,15 +97,23 @@ export default class BoardModel {
     }
 
     getAllSquares() {
-        return this.#squares.map((square, i) => (
-            {
-                x: Math.floor(i / this.size),
-                y: i % this.size,
-                region: square.region,
-                isQueen: square.isQueen,
-                isNoGo: square.isNoGo
-            }
-        ));
+        return this.#squares.map((square, i) => {
+            const x = Math.floor(i / this.size);
+            const y = i % this.size;
+            const isUnsolvable = (
+                this.rows[x].isUnsolvable
+                || this.columns[y].isUnsolvable
+                || (this.regions[square.region] !== undefined
+                    && this.regions[square.region].isUnsolvable)
+            );
+            return ({
+                    x: x,
+                    y: y,
+                    region: square.region,
+                    isQueen: square.isQueen,
+                    isUnsolvable: isUnsolvable
+                });
+            });
     }
 
     setRegion(x, y, region) {
@@ -120,19 +129,10 @@ export default class BoardModel {
         const square = this.getSquare(x, y);
         square.isQueen = true;
         this.#regions[square.region].update();
-        this.#rows[x].update;
+        this.#rows[x].update();
         this.#columns[y].update();
 
-        const adjacentIndices = [
-            {x: x - 1, y: y - 1},
-            {x: x, y: y - 1},
-            {x: x + 1, y: y - 1},
-            {x: x - 1, y: y},
-            {x: x + 1, y: y},
-            {x: x - 1, y: y + 1},
-            {x: x, y: y + 1},
-            {x: x + 1, y: y + 1},
-        ]
+        const adjacentIndices = this.getAdjacentIndices(x, y);
 
         adjacentIndices.forEach(({ x, y }) => {
             if (x < 0 || x >= this.size || y < 0 || y >= this.size) return;
@@ -164,6 +164,19 @@ export default class BoardModel {
             repr += '\n';
         }
         console.log(repr);
+    }
+
+    getAdjacentIndices(x, y) {
+        return [
+            {x: x - 1, y: y - 1},
+            {x: x, y: y - 1},
+            {x: x + 1, y: y - 1},
+            {x: x - 1, y: y},
+            {x: x + 1, y: y},
+            {x: x - 1, y: y + 1},
+            {x: x, y: y + 1},
+            {x: x + 1, y: y + 1},
+        ];
     }
 
     #get1dIndex(x, y) {
@@ -205,6 +218,11 @@ class SquareCollection {
         return this.#squares.filter(s => s.isNoGo);
     }
 
+    get freeSquares() {
+        if (this.#squares === undefined) return [];
+        return (this.#squares.filter(s => !s.isNoGo && !s.isQueen));
+    }
+
     get isSolved() {
         if (this.#squares === undefined) return false;
         return this.queens.length === 1;
@@ -212,7 +230,7 @@ class SquareCollection {
 
     get isUnsolvable() {
         if (this.#squares === undefined) return false;
-        return this.noGos === this.size;
+        return this.noGos.length === this.size;
     }
 
     update() {
