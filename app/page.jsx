@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import BoardModel from './board';
 import BoardSolver from './solver'
 
-const BoardControl = ({ size, newSize, setNewSize, boardIsFullyDefined, reset, solve, isEditable, isResettable }) => {
+const BoardControl = ({ size, newSize, setNewSize, boardIsFullyDefined, reset, solve, isEditable, isResettable, isDoneSolving }) => {
     return (
         <div className='settings'>
             <div className='boardSizeSettings'>
@@ -12,8 +12,10 @@ const BoardControl = ({ size, newSize, setNewSize, boardIsFullyDefined, reset, s
                 <input  className='sizeSlider' type='range' min='5' max='16' value={newSize}
                 onChange={(e) => setNewSize(parseInt(e.target.value))} disabled={!isEditable} />
             </div>
-            <button className='resetBtn' onClick={reset} disabled={!isEditable || (!isResettable && size === newSize)}>Reset</button>
-            <button className='solveBtn' onClick={solve} disabled={!boardIsFullyDefined || !isEditable}>Solve</button>
+            <div className='buttons'>
+                <button className='resetBtn' onClick={reset} disabled={(!isEditable || (!isResettable && size === newSize)) && !isDoneSolving}>Reset</button>
+                <button className='solveBtn' onClick={solve} disabled={!boardIsFullyDefined || !isEditable}>Solve</button>
+            </div>
         </div>
     );
 }
@@ -41,6 +43,7 @@ const RegionSelector = ({ size, selectedRegion, setSelectedRegion, isEditable })
 
 const Square = ({ x, y, region, isQueen, isUnsolvable, selectedRegion, updateRegion, mouseIsDown, isEditable }) => {
     const [isHovered, setIsHovered] = useState(false);
+    const squareRef = useRef(null);
 
     const renderSvg = () => {
         if (isQueen) return (
@@ -55,21 +58,52 @@ const Square = ({ x, y, region, isQueen, isUnsolvable, selectedRegion, updateReg
         );
     }
 
+    const handleInteraction = useCallback(() => {
+        if (isEditable) {
+            updateRegion(x, y, selectedRegion);
+        }
+    }, [isEditable, updateRegion, x, y, selectedRegion]);
+
+    useEffect(() => {
+        const square = squareRef.current;
+        
+        const mouseEnterHandler = (e) => {
+            e.preventDefault();
+            if (isEditable) {
+                setIsHovered(true);
+                if (mouseIsDown) handleInteraction();
+            }
+        };
+
+        square.addEventListener('mouseenter', mouseEnterHandler, { passive: false });
+        
+        return () => {
+            square.removeEventListener('mouseenter', mouseEnterHandler);
+        };
+    }, [isEditable, mouseIsDown, handleInteraction]);
+
+    useEffect(() => {
+        if (!mouseIsDown) {
+            setIsHovered(false);
+        }
+    }, [mouseIsDown]);
+
     return (
         <div
+        ref={squareRef}
             className={`square${isQueen ? ' isQueen' : ''}${isUnsolvable ? ' isUnsolvable' : ''}`}
             style={{
                 backgroundColor: `var(--queens-board-colour${region + 1})`,
                 opacity: isHovered ? 0.9 : 1
             }}
-            onMouseDown={() => {if (isEditable) updateRegion(x, y, selectedRegion)}}
-            onMouseEnter={(e) => {
+            onMouseDown={handleInteraction}
+            onMouseEnter={() => {
                 if (isEditable) {
                     setIsHovered(true);
-                    if (mouseIsDown) updateRegion(x, y, selectedRegion);
+                    if (mouseIsDown) handleInteraction();
                 }
             }}
-            onMouseLeave={(e) => setIsHovered(false)}
+            onMouseLeave={() => setIsHovered(false)}
         >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">{renderSvg()}</svg>
         </div>
@@ -98,13 +132,11 @@ const Board = ({ model, isEditable, selectedRegion, updateRegion, mouseIsDown })
     );
 }
 
-const SolvedMessage = ({ model }) => {
-    let className = model.isSolved ? 'solved' : '';
-    className = model.isUnsolvable ? 'unsolvable' : className;
-    let message = model.isSolved ? '🎉 Solved! 🎉' : '';
+const StatusMessage = ({ model }) => {
+    let message = model.isSolved ? '🎉 Solved! 🎉' : '\u200b';
     message = model.isUnsolvable ? 'Board is unsolvable 😵' : message;
     return (
-        <h2 className={className}>
+        <h2 className='statusMessage'>
             {message}
         </h2>
     )
@@ -121,6 +153,8 @@ const App = () => {
         setBoardModel(new BoardModel(boardSize));
         setSelectedRegion(0);
         setResettable(false);
+        setDoneSolving(false);
+        setBoardIsEditable(true);
     }
 
     const solveBoard = () => {
@@ -128,7 +162,28 @@ const App = () => {
         const solver = new BoardSolver(boardModel);
         const finalBoard = solver.solve();
         setBoardModel(finalBoard);
+        setDoneSolving(true);
     }
+
+    const handleTouchStart = (e) => {
+        setMouseIsDown(true);
+        e.preventDefault();
+        const touch = e.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (element?.classList.contains('square')) {
+            element.dispatchEvent(new Event('mouseenter'));
+        }
+    };
+
+    const handleTouchMove = (e) => {
+        e.preventDefault();
+        if (!mouseIsDown) return;
+        const touch = e.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (element?.classList.contains('square')) {
+            element.dispatchEvent(new Event('mouseenter'));
+        }
+    };
 
     const [mouseIsDown, setMouseIsDown] = useState(false);
     const [boardSize, setBoardSize] = useState(5);
@@ -136,6 +191,34 @@ const App = () => {
     const [boardIsEditable, setBoardIsEditable] = useState(true);
     const [selectedRegion, setSelectedRegion] = useState(0);
     const [isResettable, setResettable] = useState(false);
+    const [isDoneSolving, setDoneSolving] = useState(false);
+    const [isWidescreen, setisWidescreen] = useState(true);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setisWidescreen(window.innerWidth > 1050);
+        };
+
+        setisWidescreen(window.innerWidth > 1050);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
+        const board = document.querySelector('.board');
+
+        board.addEventListener('touchstart', handleTouchStart, { passive: false });
+        board.addEventListener('touchmove', handleTouchMove, { passive: false });
+        board.addEventListener('touchend', () => setMouseIsDown(false));
+        board.addEventListener('touchcancel', () => setMouseIsDown(false));
+
+        return () => {
+            board.removeEventListener('touchstart', handleTouchStart);
+            board.removeEventListener('touchmove', handleTouchMove);
+            board.removeEventListener('touchend', () => setMouseIsDown(false));
+            board.removeEventListener('touchcancel', () => setMouseIsDown(false));
+        };
+    }, []);
 
     return (
         <div
@@ -148,7 +231,7 @@ const App = () => {
                 return false;
             }}
         >
-            <div className='appContent'>
+            <div className='appContent controls'>
                 <h1>Queens Solver</h1>
                 <h2>Create and solve Queens boards in seconds.</h2>
                 <BoardControl
@@ -160,6 +243,7 @@ const App = () => {
                     solve={solveBoard}
                     isEditable={boardIsEditable}
                     isResettable={isResettable}
+                    isDoneSolving={isDoneSolving}
                 />
                 <h3>Select region to draw:</h3>
                 <RegionSelector
@@ -168,7 +252,7 @@ const App = () => {
                     setSelectedRegion={setSelectedRegion}
                     isEditable={boardIsEditable}
                 />
-                <SolvedMessage model={boardModel} />
+                {isWidescreen && <StatusMessage model={boardModel} />}
             </div>
             <div className='appContent'>
                 <Board
@@ -178,6 +262,7 @@ const App = () => {
                         updateRegion={updateRegion}
                         mouseIsDown={mouseIsDown}
                     />
+                {!isWidescreen && <StatusMessage model={boardModel} />}
             </div>
         </div>
     );

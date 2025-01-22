@@ -28,12 +28,21 @@
     --queens-board-colour3: #96beff;
     --queens-board-colour2: #ffc992;
     --queens-board-colour1: #bba3e2;
-    --max-app-width: 800px;
-    --board-size: clamp(200px, 100%, var(--max-app-width));
+}
+
+html {
+    min-height: 100%;
+    min-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(10px, 0.857vw, 16px);
 }
 
 body {
     margin: 0;
+    min-height: 100%;
+    min-width: 100%;
     font-family: 'Noto Sans';
     color: var(--colour-text);
     background-color: var(--colour-bg);
@@ -44,29 +53,39 @@ body {
     width: 100%;
     height: 100%;
     display: flex;
-    gap: 4rem;
     justify-content: center;
+    align-items: flex-start;
+    gap: 4rem;
+    padding: 2rem 4rem;
+    touch-action: pan-y;
 }
 
 .appContent {
-    width: 100%;
-    max-width: var(--max-app-width);
-    margin: 4rem 0;
+    width: minmax(40vw, 800px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    touch-action: pan-y;
+}
+
+.controls {
+    flex-grow: 1;
+    align-self: flex-start;
 }
 
 h1 {
-    font-size: 4em;
+    font-size: 4rem;
     font-weight: 400;
-    margin: 4rem 0 0;
+    margin: 0;
 }
 
 h2 {
-    font-size: 1.2em;
+    font-size: 1.2rem;
     font-weight: 400;
 }
 
 h3 {
-    font-size: 1em;
+    font-size: 1rem;
     font-weight: bold;
 }
 
@@ -79,13 +98,14 @@ h3 em {
 button {
     border-radius: 10%;
     border: none;
-    min-width: 5em;
-    margin: 0 0.2em 0;
+    min-width: 6rem;
+    height: 100%;
+    margin: 0 0.3rem 0;
     transition: 250ms;
-    color: var(--colour-text);
+    color: var(--colour-bg);
     opacity: 0.5;
     font-weight: bold;
-    font-size: medium;
+    font-size: 1.5rem;
 }
 
 button:enabled {
@@ -114,12 +134,17 @@ button:enabled {
 .settings {
     width: 100%;
     display: flex;
-    padding: 2em 0;
+    align-items: center;
+    gap: 4rem;
+}
+
+.buttons {
+    height: 6rem;
+    display: flex;
 }
 
 .boardSizeSettings {
     flex-grow: 1;
-    padding-right: 4em;
 }
 
 .sizeSlider {
@@ -135,7 +160,8 @@ button:enabled {
 }
 
 .sizeSlider:disabled {
-    cursor: default;
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 .sizeSlider::-webkit-slider-thumb {
@@ -150,11 +176,13 @@ button:enabled {
 
 .board {
     display: grid;
-    width: var(--board-size);
+    width: min(50vw, 90vh);
     aspect-ratio: 1;
     overflow: hidden;
+    margin: auto;
     border: 1px solid var(--colour-text);
     background-color: var(--colour-text);
+    touch-action: none;
 }
 
 .square {
@@ -165,6 +193,7 @@ button:enabled {
     background-color: var(--colour-no-selection);
     border: 1px solid var(--colour-text);
     transition: 200ms;
+    touch-action: none;
 }
 
 .square svg {
@@ -183,12 +212,13 @@ button:enabled {
 }
 
 .regionSelector {
-    width: 100%;
-    padding: 2em;
+    width: minmax(40vw, 800px);
+    padding: 2rem;
     border-radius: 2rem;
     display: flex;
     flex-wrap: wrap;
-    grid-gap: 1rem;
+    flex-grow: 0;
+    gap: 1rem;
     align-items: center;
     justify-content: center;
     background-color: var(--colour-bg-dark);
@@ -202,10 +232,13 @@ button:enabled {
     aspect-ratio: 1;
     border-radius: 50%;
     transition: 150ms;
+    cursor: not-allowed;
+    opacity: 0.5;
 }
 
 .regionSelector input:enabled {
     cursor: pointer;
+    opacity: 1;
 }
 
 .regionSelector input:hover:enabled {
@@ -223,4 +256,74 @@ button:enabled {
 
 .regionSelector input:checked::before {
     opacity: 0;
+}
+
+.statusMessage {
+    text-align: center;
+    margin-top: 2rem;
+}
+
+@media (max-width: 1400px) {
+    html {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 1050px), (orientation: portrait) {
+    body {
+        overflow-y: scroll;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+    
+    h3 {
+        font-size: 1.2rem;
+    }
+
+    .appContainer {
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+    }
+
+    .controls {
+        align-self: center;
+    }
+
+    .board {
+        width: min(100%, 90vmin);
+    }
+
+    .appContent {
+        width: min(100%, 90vmin);
+        margin: 2rem 0;
+    }
+}
+
+@media (max-width: 500px) {
+    html {
+        font-size: 10px;
+    }
+
+    .settings {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .boardSizeSettings,
+    .buttons {
+        width: 100%;
+    }
+
+    .buttons {
+        display: flex;
+    }
+
+    button {
+        flex-grow: 1;
+        height: 4rem;
+        border-radius: 1.2rem;
+    }
 }
