@@ -111,7 +111,8 @@ export default class BoardModel {
                     y: y,
                     region: square.region,
                     isQueen: square.isQueen,
-                    isUnsolvable: isUnsolvable
+                    isUnsolvable: isUnsolvable,
+                    isNoGo: square.isNoGo
                 });
             });
     }

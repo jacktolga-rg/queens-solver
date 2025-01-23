@@ -91,7 +91,7 @@ const Board = ({ model, isEditable, selectedRegion, updateRegion, mouseIsDown })
     return (
         <div className='board'
         style={{gridTemplate: `repeat(${model.size}, 1fr) / repeat(${model.size}, 1fr)`}}>
-            {model.getAllSquares().map(({x, y, region, isQueen, isUnsolvable}) => (
+            {model.getAllSquares().map(({x, y, region, isQueen, isUnsolvable, _}) => (
                 <Square
                     x={x}
                     y={y}
@@ -110,9 +110,10 @@ const Board = ({ model, isEditable, selectedRegion, updateRegion, mouseIsDown })
     );
 }
 
-const StatusMessage = ({ model }) => {
+const StatusMessage = ({ model, solutions }) => {
     let message = model.isSolved ? '🎉 Solved! 🎉' : '\u200b';
     message = model.isUnsolvable ? 'Board is unsolvable 😵' : message;
+    message = solutions.length > 1 ? '🎉 Solved! (multiple solutions found) 🎉' : message;
     return (
         <h2 className='statusMessage'>
             {message}
@@ -138,8 +139,9 @@ const App = () => {
     const solveBoard = () => {
         setBoardIsEditable(false);
         const solver = new BoardSolver(boardModel);
-        const finalBoard = solver.solve();
-        setBoardModel(finalBoard);
+        const finalBoards = solver.solve();
+        setSolutions(finalBoards);
+        setBoardModel(finalBoards[0]);
         setDoneSolving(true);
     }
 
@@ -150,6 +152,7 @@ const App = () => {
     const [selectedRegion, setSelectedRegion] = useState(0);
     const [isResettable, setResettable] = useState(false);
     const [isDoneSolving, setDoneSolving] = useState(false);
+    const [solutions, setSolutions] = useState([]);
     const [isWidescreen, setisWidescreen] = useState(() => window.innerWidth > 1050);
 
     useEffect(() => {
@@ -222,7 +225,7 @@ const App = () => {
                     setSelectedRegion={setSelectedRegion}
                     isEditable={boardIsEditable}
                 />
-                {isWidescreen && <StatusMessage model={boardModel} />}
+                {isWidescreen && <StatusMessage model={boardModel} solutions={solutions} />}
             </div>
             <div className='appContent'>
                 <Board

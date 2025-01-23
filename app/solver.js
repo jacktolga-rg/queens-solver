@@ -1,6 +1,10 @@
 export default class BoardSolver {
     #board;
 
+    get isSolved() {
+        return this.#board.isSolved;
+    }
+
     constructor(board) {
         this.#board = board;
     }
@@ -9,32 +13,37 @@ export default class BoardSolver {
         for (let n = 1; n < this.#board.size; n++) {
             const indexGroups = this.generateIndexGroups(n);
             let numQueensPlaced = 0;
+            let queensPlacedAtLastLoop = -1;
             while (numQueensPlaced < this.#board.size) {
+                if (queensPlacedAtLastLoop === numQueensPlaced) {
+                    return this.bruteForce();
+                }
                 for (let indices of indexGroups) {
                     numQueensPlaced = this.placeQueens(numQueensPlaced);
                     if (this.#board.isSolved || this.#board.isUnsolvable)
-                        return this.#board.clone();
+                        return [this.#board.clone()];
 
                     this.setNoGosCoveringRegions();
 
                     numQueensPlaced = this.placeQueens(numQueensPlaced);
                     if (this.#board.isSolved || this.#board.isUnsolvable)
-                        return this.#board.clone();
+                        return [this.#board.clone()];
     
                     // Check row group
                     let containedRegions = this.getContainedRegions(indices, 0);
                     this.setNoGosByGroup(indices, containedRegions, 0);
                     numQueensPlaced = this.placeQueens(numQueensPlaced);
                     if (this.#board.isSolved || this.#board.isUnsolvable)
-                        return this.#board.clone();
+                        return [this.#board.clone()];
     
                     // Check column group
                     containedRegions = this.getContainedRegions(indices, 1);
                     this.setNoGosByGroup(indices, containedRegions, 1);
                 }
+                queensPlacedAtLastLoop = numQueensPlaced;
             }
         }
-        return this.#board.clone();
+        return [this.#board.clone()];
     }
 
     generateIndexGroups(n) {
@@ -151,5 +160,18 @@ export default class BoardSolver {
             numQueensPlaced = this.placeQueens(numQueensPlaced);
         }
         return numQueensPlaced;
+    }
+
+    bruteForce() {
+        const solutions = [];
+        const startingBoard = this.#board.clone();
+        const freeSquares = startingBoard.getAllSquares()
+            .filter(({x, y, region, isQueen, isUnsolvable, isNoGo}) => !isQueen & !isNoGo);
+        for (let {x, y, region, isQueen, isUnsolvable, isNoGo} of freeSquares) {
+            this.#board = startingBoard.clone();
+            this.#board.setQueen(x, y);
+            solutions.push(...this.solve());
+        }
+        return solutions.filter(soln => soln.isSolved);
     }
 }
