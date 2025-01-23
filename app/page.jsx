@@ -113,7 +113,7 @@ const Board = ({ model, isEditable, selectedRegion, updateRegion, mouseIsDown })
 const StatusMessage = ({ model, solutions }) => {
     let message = model.isSolved ? '🎉 Solved! 🎉' : '\u200b';
     message = model.isUnsolvable ? 'Board is unsolvable 😵' : message;
-    message = solutions.length > 1 ? '🎉 Solved! (multiple solutions found) 🎉' : message;
+    message = solutions?.length > 1 ? '🎉 Solved! (multiple solutions found) 🎉' : message;
     return (
         <h2 className='statusMessage'>
             {message}
@@ -153,7 +153,12 @@ const App = () => {
     const [isResettable, setResettable] = useState(false);
     const [isDoneSolving, setDoneSolving] = useState(false);
     const [solutions, setSolutions] = useState([]);
-    const [isWidescreen, setisWidescreen] = useState(() => window.innerWidth > 1050);
+    const [windowWidth, setWindowWidth] = useState(0);
+    const [isWidescreen, setisWidescreen] = useState(() => windowWidth > 1050);
+
+    useEffect(() => {
+        setWindowWidth(window.innerWidth);
+    })
 
     useEffect(() => {
         const handleResize = () => {

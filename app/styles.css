@@ -61,7 +61,7 @@ body {
 }
 
 .appContent {
-    max-width: 800px;
+    max-width: min(90vh, 800px);
     display: flex;
     flex-direction: column;
     justify-content: center;
